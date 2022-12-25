@@ -354,6 +354,15 @@ pipeline {
 }
 ```
 
+## HOW TO waitForQualityGate Block
+
+ stage("Quality Gate") {
+            steps {
+              timeout(time: 3, unit: 'MINUTES') {
+                waitForQualityGate abortPipeline: true
+              }
+            }
+          }
 
 ## HOW TO login in dockerhub
 
@@ -383,7 +392,6 @@ pipeline {
     }
 }
 ```
-
 
 
 
