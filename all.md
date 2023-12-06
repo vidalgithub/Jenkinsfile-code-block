@@ -142,6 +142,7 @@ agent {
         image 'maven:3.8.1-adoptopenjdk-11'
         label 'my-defined-label'
         args  '-v /tmp:/tmp'
+        args '-u root:root'
     }
 }
 
@@ -765,6 +766,17 @@ pipeline {
             }
         }
  
+ 
+         //////////////////////////////////
+       stage('warning') {
+      steps {
+        script {
+            notifyUpgrade(currentBuild.currentResult, "WARNING")
+            sleep(time:env.WARNTIME, unit:"MINUTES")
+        }
+      }
+    }
+
         stage('Hello') {
             steps {
                 sh '''
@@ -866,6 +878,93 @@ pipeline {
 
 
 
+## Query Jenkins Secret store
+
+```
+stage('backup') {
+
+	      steps {
+	        script {
+	          withCredentials([
+	            string(credentialsId: 'hostname', variable: 'HOSTNAME'),
+	            string(credentialsId: 'username', variable: 'USERNAME'),
+	            string(credentialsId: 'passwd', variable: 'PASSWORD')
+	          ]) {
+
+	            sh '''
+                echo $HOSTNAME
+                echo $USERNAME
+                echo $PASSWORD
+	            '''
+	          }
+
+	        }
+
+	      }
+
+	    }
+```
 
 
+## Query Jenkins Secret store
+
+```
+pipeline {
+    agent any
+
+    stages {
+        stage('Hello') {
+            steps {
+                sh '''
+                ls 
+                pwd
+                '''
+            }
+        }
+
+    stage('backup') {
+
+	      steps {
+	        script {
+	          withCredentials([
+	            string(credentialsId: 'hostname', variable: 'HOSTNAME'),
+	            string(credentialsId: 'username', variable: 'USERNAME'),
+	            string(credentialsId: 'passwd', variable: 'PASSWORD')
+	          ]) {
+
+	            sh '''
+                echo $HOSTNAME
+                echo $USERNAME
+                echo $PASSWORD
+	            '''
+	          }
+
+	        }
+
+	      }
+
+	    }
+
+
+    }
+}
+```
+
+```
+pipeline {
+    agent any
+    stages {
+        stage('Example') {
+            environment { 
+                IMAGE = credentials('ubuntu') 
+            }
+            steps {
+                sh '''
+                docker run -i $IMAGE ls 
+                '''
+            }
+        }
+    }
+}
+```
 
