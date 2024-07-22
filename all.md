@@ -968,3 +968,25 @@ pipeline {
 }
 ```
 
+## Raise Pull Request using Jenkins
+
+```
+        stage('Raise PR') {
+            agent {
+                docker { image 'trussworks/gh-cli:dependabot-docker-cimg-python-3.10.6' }
+            }
+            steps {
+                withVault(configuration: [disableChildPoliciesOverride: false, timeout: 60, vaultCredentialId: 'vaultCred', vaultUrl: 'http://vault.beitcloud.com:8200'], vaultSecrets: [[path: 'mycreds/github/github-token', secretValues: [[envVar: 'GITHUB_TOKEN', vaultKey: 'git_token']]]]) {
+                    sh '''
+                    pwd
+                    ls -la $PWD
+                    chown jenkins:jenkins pr.sh || true
+                    chmod +x pr.sh || true
+                    tr -d "\\r" <pr.sh >a.tmp
+                    mv a.tmp pr.sh
+                    bash pr.sh
+                    '''
+                }  
+            }
+        }
+```
