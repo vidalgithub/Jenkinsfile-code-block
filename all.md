@@ -1006,8 +1006,7 @@ stage('Remove Docker Image') {
 }
 ```
 
-## Dynamically fetch Dockerhub Credentials from Vault and update in "pass" for Jenkins useDynamically fetch Dockerhub Credentials from Vault and update in "pass" for Jenkins use
-
+## Dynamically fetch Dockerhub Credentials from Vault and update in "pass" for Jenkins use
 ```
 stage('Fetch Docker Credentials from Vault and Update pass store') {
     steps {
