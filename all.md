@@ -1008,6 +1008,20 @@ stage('Remove Docker Image') {
 
 ## Dynamically fetch Dockerhub Credentials from Vault and update in "pass" for Jenkins use
 ```
+stage('Initialize Pass Store if Needed') {
+    steps {
+        script {
+            // Initialize the pass store if not already initialized
+            sh '''
+                if ! pass show docker-credential-helpers/docker-pass-initialized > /dev/null 2>&1; then
+                    echo "initialized" | pass insert -f docker-credential-helpers/docker-pass-initialized
+                fi
+                pass show docker-credential-helpers/docker-pass-initialized
+            '''
+        }
+    }
+}
+
 stage('Fetch Docker Credentials from Vault and Update pass store') {
     steps {
         script {
