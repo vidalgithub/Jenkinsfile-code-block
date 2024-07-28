@@ -1007,37 +1007,3 @@ stage('Remove Docker Image') {
 ```
 
 Dynamically fetch Dockerhub Credentials from Vault and update in "pass" for Jenkins use
-stage('Fetch Docker Credentials from Vault and Update pass store') {
-    steps {
-        script {
-            withVault(
-                configuration: [
-                    disableChildPoliciesOverride: false,
-                    timeout: 60,
-                    vaultCredentialId: 'vaultCred',
-                    vaultUrl: "${env.VAULT_URL}"
-                ],
-                vaultSecrets: [
-                    [
-                        path: 'mycreds/dockerhub-creds/vidaldocker',
-                        secretValues: [
-                            [envVar: 'DOCKERHUB_USERNAME', vaultKey: 'username'],
-                            [envVar: 'DOCKERHUB_PASSWORD', vaultKey: 'password']
-                        ]
-                    ]
-                ]
-            ) {
-                // Fetch Docker credentials from Vault
-                def dockerUsername = sh(script: "echo ${DOCKERHUB_USERNAME}", returnStdout: true).trim()
-                def dockerPassword = sh(script: "echo ${DOCKERHUB_PASSWORD}", returnStdout: true).trim()
-
-                // Update pass store with new credentials
-                sh """
-                    cd /var/lib/jenkins
-                    echo ${dockerPassword} | docker login -u ${dockerUsername} --password-stdin
-                    cd -
-                """
-            }
-        }
-    }
-}
