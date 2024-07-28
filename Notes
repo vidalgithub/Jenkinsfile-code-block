@@ -1,0 +1,76 @@
+```
+## Jenkins Warning Solution: Your password will be stored unencrypted in /var/lib/jenkins/.docker/config.json
+```
+
+
+The warning you are seeing indicates that the Docker client is storing your Docker credentials unencrypted on the filesystem. This can be a security risk, especially if the machine is shared or if it is not properly secured.
+To avoid this, you can configure Docker to use a credential helper. Credential helpers store Docker credentials securely, often in a system-specific manner, such as using the operating system's secure credential storage mechanisms.
+The purpose of using a GPG key for the password store in the context of Docker credentials is to securely encrypt and manage your sensitive data. 
+Here’s how it works and how it relates to Jenkins credentials:
+
+Purpose of GPG Key for the Password Store
+GPG (GNU Privacy Guard) is a tool for secure communication and data storage. It is commonly used to encrypt data and create digital signatures. When you use GPG for a password store, it encrypts your passwords and other sensitive information, ensuring that only authorized users (those with the corresponding private key) can decrypt and access the data.
+
+Using GPG with Docker Credentials
+When you log in to Docker and store your credentials using docker login, the credentials are typically stored in plain text in a configuration file (~/.docker/config.json). This can be a security risk if someone gains access to this file.
+By using GPG with a password store like pass, you can encrypt these credentials. Here’s a simplified flow:
+Encrypt Credentials: The pass utility uses GPG to encrypt your Docker credentials and other secrets.
+Secure Storage: Encrypted credentials are stored in the password store.
+Decryption on Demand: When you need to use the credentials, pass decrypts them using your GPG key.
+
+Here are the steps to configure a Docker credential helper:
+Step 1: Install a Credential Helper AND GENERATE gpg key if you do not have any
+Step 2: Initialize the Password Store (Linux Only)
+Step 3: Configure Docker to Use the Credential Helper
+Step 4: Log in to Docker
+Step 5: Verify
+You can verify that the credentials are stored using the configured credential helper by checking the contents of ~/.docker/config.json and ensuring that the credentials are not stored there directly.
+
+Step 1: Install a Credential Helper: Install pass and docker-credential-pass:
+# NOTE: Work as user jenkins
+    sudo -u jenkins -i # switch to user jenkins and open a new shell
+    sudo apt-get update
+    sudo apt-get install pass -y # install pass
+    wget https://github.com/docker/docker-credential-helpers/releases/download/v0.6.3/docker-credential-pass-v0.6.3-amd64.tar.gz
+    tar -xvf docker-credential-pass-v0.6.3-amd64.tar.gz
+    sudo mv docker-credential-pass /usr/local/bin/   # install docker-credential-pass
+# Verify that /usr/local/bin/docker-credential-pass is executable OR chmod +x /usr/local/bin/docker-credential-pass && echo $PATH
+    ls -l /usr/local/bin/docker-credential-pass
+Output:    -rwxr-xr-x 1 root root 1234567 Jul 20 12:34 /usr/local/bin/docker-credential-pass
+
+Step 1-1: GENERATE gpg key
+    gpg --list-keys # to verify if you have a gpg key
+    gpg --gen-key
+
+Step 2: Initialize the Password Store (Linux Only)
+    pass init "Your GPG Key ID"
+
+Step 3: Configure Docker to Use the Credential Helper
+    sudo -u jenkins -i
+    mkdir -p ~/.docker
+    vim  ~/.docker/config.json
+    # Add the following content to configure Docker to use pass:
+    {
+        "credsStore": "pass"
+    }
+    cat ~/.docker/config.json
+
+Step 4: Log in to Docker
+    docker login -u your-docker-username
+    OR
+    echo "<DOCKER_PASSWORD>" | docker login -u "<DOCKER_USERNAME>" --password-stdin
+    pass ls
+
+Step 5: Verify
+    You can verify that the credentials are stored using the configured credential helper by checking the contents of ~/.docker/config.json and ensuring that the credentials are not stored there directly.
+    sudo -u jenkins -i
+    cat ~/.docker/config.json
+
+Step 6: Verify if pass is initialized 
+    pass show docker-credential-helpers/docker-pass-initialized
+          IF NOT INITIALIZED, DO
+	echo "initialized" | pass insert -f docker-credential-helpers/docker-pass-initialized
+	pass show docker-credential-helpers/docker-pass-initialized
+
+
+RE-RUN YOUR JENKINS JOB AND ENSURE THERE ARE NO MORE PLAINTEXT PASSWORD STORED IN /var/lib/jenkins/.docker/config.json
